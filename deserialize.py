@@ -21,7 +21,21 @@ class Deserializer:
         return int(ext_result)
 
     def decode_bulk_string(self):
-        pass
+        str_count = ""
+        bulk_str_res = []
+
+        for i in range(self.position, len(self.value)):
+            if self.value[i].isdigit():
+                str_count += self.value[i]
+                if str_count == "-1":
+                    return None
+                elif str_count == '0':
+                    return ""
+            
+            if self.value[i] != "\r" and self.value[i] != "\n" and self.value[i] != str_count:
+                bulk_str_res.append(self.value[i])
+        
+        return "".join(bulk_str_res) # up to here, test if this is correct now
 
     def decode_array(self):
         pass
