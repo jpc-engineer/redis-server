@@ -28,7 +28,24 @@ class Deserializer:
         return int(current_value)
 
     def decode_bulk_string(self):
-        pass
+        end = self.value.find('\r\n', self.position)
+
+        if end == -1:
+            end = len(self.value)
+
+        strlen = self.value[self.position:end]
+
+        self.position = end + 2
+
+        strlen_int = int(strlen)
+        if strlen_int == -1:
+            return None
+        
+        current_str = self.value[self.position:self.position + strlen_int]
+
+        self.position = self.position + strlen_int + 2
+        
+        return current_str
 
     def decode_array(self):
         result = ""
