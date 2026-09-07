@@ -1,7 +1,7 @@
 class Deserializer:
     def __init__(self, value):
         self.value = value
-        self.position = 1
+        self.position = 0
 
     def decode_string(self):
         end = self.value.find('\r\n', self.position)
@@ -48,32 +48,35 @@ class Deserializer:
         return current_str
 
     def decode_array(self):
-        result = ""
-        clean_value = self.value.replace("/r", "").replace("\n", "")
-        for i in range(self.position, len(clean_value)):
-            if clean_value[i] == '$':
-                for item in clean_value:
-                    content = Deserializer(item).decoder_dispatch()
-                    result += content
+        end = self.value.find('\r\n', self.position)
+
+        count = self.value[self.position:end]
+        self.position = end + 2
+        intcount = int(count)
+
+        if intcount == -1:
+            return None
+
+        result = []
+
+        for i in range(intcount):
+            r = self.decoder_dispatch()
+            result.append(r)
         
         return result
 
     def decoder_dispatch(self):
-        if self.value[0] == '+':
-            self.position += 1
+        char = self.value[self.position]
+        self.position += 1
+        if char == '+':
             return self.decode_string()
-        elif self.value[0] == '-':
-            self.position += 1
+        elif char == '-':
             return self.decode_string()    
-        elif self.value[0] == ':':
-            self.position += 1
+        elif char == ':':
             return self.decode_integer()    
-        elif self.value[0] == '$':
-            self.position += 1
+        elif char == '$':
             return self.decode_bulk_string()    
-        elif self.value[0] == '*':
-            self.position += 1
+        elif char == '*':
             return self.decode_array()
-
-#d = Deserializer("*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n")
-#d.decoder_dispatch()
+        else:
+            raise ValueError(f"Unknown RESP type byte: {char}")

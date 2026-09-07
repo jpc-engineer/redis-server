@@ -1,23 +1,26 @@
 import pytest
 from deserialize import Deserializer
 
-simple_str = "+test\r\n"
+
 error = "-ERR unknown command\r\n"
-int_test = ":1000\r\n"
-bulkstr_test = "$5\r\nhello\r\n"
+array_test = "*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"
 
-@pytest.fixture
-def deserializer():
-    return Deserializer(bulkstr_test)
+def test_decode_string():
+    d = Deserializer("+test\r\n")
+    result = d.decoder_dispatch()
+    assert result == "test"
 
-def test_decode_string(deserializer):
-    #assert deserializer.decode_string() == "ERR unknown command"
-    pass
+def test_decode_integer():
+    d = Deserializer(":1000\r\n")
+    result = d.decoder_dispatch()
+    assert result == 1000 
 
-def test_decode_integer(deserializer):
-    #assert deserializer.decode_integer() == 1000
-    pass
+def test_decode_bulk_string():
+    d = Deserializer("$5\r\nhello\r\n")
+    result = d.decoder_dispatch()
+    assert result == "hello"
 
-def test_decode_bulk_string(deserializer):
-    assert deserializer.decode_bulk_string() == "hello"
-    
+def test_decode_array():
+    d = Deserializer("*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n")
+    result = d.decoder_dispatch() 
+    assert result == ["foo", "bar"]
