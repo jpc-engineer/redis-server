@@ -67,7 +67,31 @@ def resp(conn, addr, storage, expires):
                         if parsed[i] in expires:
                             del expires[parsed[i]]
                 response = Serializer(count).encode_integer()
-                        
+
+            elif command == "incr" or command == "decr":
+                counter = parsed[1]
+                if command == "incr":
+                    step = +1
+
+                elif command == "decr":
+                    step = -1
+
+                if counter in storage:
+                    currentval = storage[counter]
+                    try:
+                        conversion = int(currentval)
+                        conversion += step
+                        storage[counter] = str(conversion)
+                        response = Serializer(storage[counter]).encode_integer()
+                    except:
+                        response = Serializer("Invalid: current value is not a digit").encode_error()
+
+                else:
+                    count = 0
+                    count += step
+                    storage[counter] = str(count)
+                    response = Serializer(storage[counter]).encode_integer()
+
             else:
                 response = Serializer("ERR unknown command").encode_error()
 
