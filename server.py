@@ -11,11 +11,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
     server_socket.listen()
     print(f"Server is listening on port {HOST}:{PORT}...")
 
+    set_storage = {}
+
     while True:
         conn, addr = server_socket.accept()
+        print(f"Connected successfully by client at: {addr}")
         with conn:
             while True:
-                print(f"Connected successfully by client at: {addr}")
 
                 # read data from connection
                 data = conn.recv(1024) 
@@ -35,6 +37,20 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                     message = parsed[1]
                     response = Serializer(message).encode_bulk_string()
                 
+                elif command == "set":
+                    key = parsed[1]
+                    value = parsed[2]
+                    set_storage[key] = value
+                    response = Serializer("OK").encode_str()
+                
+                elif command == "get":
+                    key = parsed[1]
+                    if key in set_storage:
+                        message = set_storage[key]
+                        response = Serializer(message).encode_bulk_string()
+                    else:
+                        response = Serializer(None).encode_bulk_string()
+
                 else:
                     response = Serializer("ERR unknown command").encode_error()
 
