@@ -44,12 +44,30 @@ def resp(conn, addr, storage, expires):
                         del expires[key]
                         del storage[key]
                         response = Serializer(None).encode_bulk_string()
-                        
+
                 if key in storage:
                     message = storage[key]
                     response = Serializer(message).encode_bulk_string()
                 else:
                     response = Serializer(None).encode_bulk_string()
+
+            elif command == "exists":
+                key = parsed[1]
+                if key in storage:
+                    response = Serializer(1).encode_integer()
+                else:
+                    response = Serializer(0).encode_integer()
+
+            elif command == "del":
+                count = 0
+                for i in range(1, len(parsed)):
+                    if parsed[i] in storage:
+                        del storage[parsed[i]]
+                        count += 1
+                        if parsed[i] in expires:
+                            del expires[parsed[i]]
+                response = Serializer(count).encode_integer()
+                        
             else:
                 response = Serializer("ERR unknown command").encode_error()
 
