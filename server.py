@@ -1,11 +1,13 @@
 import socket
 import threading
 import time
+import json
 from serialize import Serializer
 from deserialize import Deserializer
 
 HOST = "127.0.0.1"
 PORT = 6379
+FILENAME = "dump.json"
 
 def resp(conn, addr, storage, expires):
     with conn:
@@ -92,6 +94,35 @@ def resp(conn, addr, storage, expires):
                     storage[counter] = str(count)
                     response = Serializer(storage[counter]).encode_integer()
 
+            elif command == "rpush" or command == "lpush":
+                collection = parsed[1]
+                flag = True
+                if collection not in storage:
+                    currentlist = []
+                elif not isinstance(storage[collection], list):
+                    response = Serializer("WRONGTYPE Operation against a key holding the wrong kind of value").encode_error()
+                    flag = False
+                else:
+                    currentlist = storage[collection]
+
+                if flag:
+                    for i in range(2, len(parsed)):
+                        if command == 'rpush':
+                            currentlist.append(parsed[i])
+                        elif command == 'lpush':
+                            currentlist.insert(0, parsed[i]) 
+                
+                    storage[collection] = currentlist
+
+                    response = Serializer(len(storage[collection])).encode_integer() 
+
+            elif command == "save":
+                try:
+                    with open(FILENAME, 'w') as f:
+                        json.dump(storage, f) 
+                        response = Serializer("OK").encode_str() 
+                except Exception as e:
+                    response = Serializer("Error saving to file").encode_error()
             else:
                 response = Serializer("ERR unknown command").encode_error()
 
@@ -105,6 +136,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
 
     storage = {}
     expires = {}
+
+    try:
+        with open(FILENAME, 'r') as f:
+            data = json.load(f)
+            storage.update(data)
+    except FileNotFoundError:
+        pass
+
 
     while True:
         conn, addr = server_socket.accept()
