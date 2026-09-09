@@ -1,0 +1,7 @@
+REDIS Benchmark test results:
+SET: 169779.30 requests per second, p50=0.151 msec                    
+GET: 180831.83 requests per second, p50=0.151 msec   
+
+My Redis-lite-server Benchmark test results:
+SET: 92506.94 requests per second, p50=0.479 msec                   
+GET: 93632.96 requests per second, p50=0.423 msec 
